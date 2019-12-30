@@ -1,0 +1,6 @@
+PySimpleGUI
+scipy
+numpy
+matplotlib
+mplcursors
+ipython
