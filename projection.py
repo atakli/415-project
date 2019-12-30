@@ -352,10 +352,10 @@ else:														# Use ready projection data (txt or mat)
 		img = mat_liste[7]
 		with open('distance_list.obj','rb') as dist:
 			distance = pickle.load(dist)
-	elif values[1] == True:								# from mat
+	elif values[1] == True:											# from mat
 		if values[5] == []:
 			values[5] = ['kare_kosede_50ye50.mat']
-		mat = sio.loadmat(values[5][0][:-4]+'_projection_data.mat')
+		mat = sio.loadmat('projection_datas/'+values[5][0][:-4]+'_projection_data.mat')
 		mat_liste = list(mat.values())
 		image_to_be_reconstructed = mat_liste[3]
 		number_of_projections = image_to_be_reconstructed.shape[0]
