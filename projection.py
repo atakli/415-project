@@ -8,7 +8,7 @@ import matplotlib.pyplot as plt
 from numpy.fft import fft2,ifft2
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 sg.change_look_and_feel('DefaultNoMoreNagging')
-layout = [					# Here's for the GUI window
+layout = [												# Here's for the GUI window
 	[sg.Text('Choose where you get the projection data from:')],
     [sg.Radio('From text file     ', "RADIO2"), sg.Radio('From mat file     ', "RADIO2"),
 	sg.Radio('Do new projection          ', "RADIO2", default=True)],
@@ -23,36 +23,30 @@ layout = [					# Here's for the GUI window
 	[sg.Radio('Ramp     ', "RADIO3", default=True), sg.Radio('Hanning     ', "RADIO3"),
 	sg.Radio('Cosine     ', "RADIO3"), sg.Radio('No filter     ', "RADIO3")],
 	[sg.Checkbox('Do only projection', default=False),sg.Text(' '*15+'Enter the projection angle:'),
-	sg.InputText(size=(5,1))],#sg.Checkbox('Show Error Image')],
-	# [sg.Checkbox('Both filtered and none-filtered versions', default=True)],
+	sg.InputText(size=(5,1))],
 	[sg.Submit(), sg.Cancel()]]
 window  = sg.Window('Projection GUI', auto_size_text=True, default_element_size=(40, 1)).Layout(layout)
 while True:
 	event, values = window.Read()
 	if event == 'Submit':
+		window.Close()
 		break
 	elif event == 'Cancel':
 		window.Close()
 		sys.exit()
-
-if event == 'Submit':
-	window.Close()
-elif event == 'Cancel':
-	sys.exit()
 pi = np.pi
 if values[6] == True:
 	filter = 6
 	filter_name = 'Ramp Filter'
-else:
-	if values[7] == True:
-		filter = 7
-		filter_name = 'Hanning Filter'
-	elif values[8] == True:
-		filter = 8
-		filter_name = 'Cosine Filter'
-	elif values[9] == True:
-		filter = 0
-		filter_name = 'No Filter'
+elif values[7] == True:
+	filter = 7
+	filter_name = 'Hanning Filter'
+elif values[8] == True:
+	filter = 8
+	filter_name = 'Cosine Filter'
+elif values[9] == True:
+	filter = 0
+	filter_name = 'No Filter'
 def project():
 	pro_bas = time.time()
 	y_values = x_values = np.arange(-size/2, size/2+1)				# determine x & y values on the image
@@ -76,7 +70,6 @@ def project():
 				if aci==0 and y_degeri==t_degeri:					# in case of 0 in the denominator
 					for x_degeri in x_values:
 						result.append([aci,t_degeri,x_degeri,y_degeri])
-						# np.where(aci==0 and y_values == t_degeri,)
 				elif aci != 0:
 					resulted_x_values = (y_degeri * cos - t_degeri)/sin # line equation
 					result.append([aci,t_degeri,resulted_x_values,y_degeri])
@@ -114,7 +107,6 @@ def project():
 			temp_midX=((j[2]+temp[2])/2)
 			temp_midY=((j[3]+temp[3])/2)
 			dist_temp = pow((j[2]-temp[2])*(j[2]-temp[2])+(j[3]-temp[3])*(j[3]-temp[3]),1/2)
-			# dist_temp = abs( j[2]-temp[2] + (j[3]-temp[3])*1j )
 			midX.append(temp_midX)
 			midY.append(temp_midY)
 			distance.append(dist_temp)
@@ -147,7 +139,6 @@ def project():
 					break
 			grup.append(number_of_beams-k*2)
 		sa += 1
-	# print(grup)
 	# açılara göre gruplu projection:
 	Inputt = iter(projection)
 	son_projection_with_zeros = [list(__import__('itertools').islice(Inputt, elem)) for elem in grup]
@@ -161,19 +152,7 @@ def project():
 		b = number_of_beams - a - len(pro)
 		ekle = np.pad(pro,(a,b),'constant')
 		son_projection_with_zeros_yeni = np.append(son_projection_with_zeros_yeni,ekle)
-	son_projection_with_zeros = son_projection_with_zeros_yeni.reshape(number_of_projections,number_of_beams).tolist()
-	
-	# son_distance_with_zeros_den = son_distance_with_zeros.copy()
-	# son_distance_with_zeros_yeni = np.empty(0)
-	# __import__('pdb').set_trace()
-	# for pro in son_distance_with_zeros_den:
-		# a = int( ( number_of_beams - len(pro) ) / 2)
-		# b = number_of_beams - a - len(pro)
-		# ekle = np.pad(pro,(a,b),'constant')
-		# son_distance_with_zeros_yeni = np.append(son_distance_with_zeros_yeni,ekle)
-		# __import__('pdb').set_trace()
-	# son_distance_with_zeros_den = son_distance_with_zeros_yeni.reshape(number_of_projections,number_of_beams).tolist()
-	
+	son_projection_with_zeros = son_projection_with_zeros_yeni.reshape(number_of_projections,number_of_beams).tolist()	
 	grup_say=0
 	for pro in son_distance_with_zeros:
 		if (len(pro) < number_of_beams):
@@ -181,8 +160,6 @@ def project():
 				pro.insert(0,0)
 				pro.insert(len(pro),0)
 		grup_say+=1
-	# __import__('pdb').set_trace()
-	# print('aynı mı: ',np.array_equal(son_distance_with_zeros_den,son_distance_with_zeros))
 	with open('projection_data.txt','w') as dosya_txt:
 		dosya_txt.write(str(number_of_projections)+'\n'+str(number_of_sampling_points)+'\n')
 		for k in range(len(son_projection_with_zeros)):
@@ -194,33 +171,34 @@ def project():
 	row_array=np.array(rowdata)
 	with open('distance_list.obj','wb') as dist:
 		pickle.dump(son_distance_with_zeros,dist)
-	sio.savemat(values[5][0][:-4]+'_projection_data.mat', mdict={	'projection': mat_array,'columndata':column_array,
-												'rowdata':row_array,'size':size, 'original':img	})	
+	sio.savemat('projection_datas/'+values[5][0][:-4]+'_projection_data.mat', 
+	mdict={	'projection': mat_array,'columndata':column_array,'rowdata':row_array,'size':size, 'original':img	})	
 	print('projection time: ',time.time() - pro_bas)
 	if values[10] == True:							# If we do projection only
 		plot_projection(t,son_projection_with_zeros,number_of_sampling_points,step_size)
 	return son_projection_with_zeros,son_distance_with_zeros,rowdata,columndata
 def plot_projection(t,projection,number_of_sampling_points,step_size):
-	if values[11] == '':
-		fig, axs = plt.subplots(2,3)
+	if values[11] == '':				# plot the projection of only an angle
+		fig, axs = plt.subplots(1,4)
 		sayyy = 0
 		for i in axs.flatten():
 			i.plot(t.round(2),projection[sayyy])
 			sayyy += 1
+		fig.text(0.5, 0.02, 'The beam which going through the image (t coordinates)',ha='center')
+		fig.text(0.1, 0.3, 'Projection value for the beams',ha='center',rotation='vertical')
 		plt.suptitle('Projections for '+'\nNumber of sampling points: '+str(number_of_sampling_points)+'\n'+' Step size: '+str(step_size))
 		plt.figure()
 		plt.imshow(img,cmap='gray')
 		plt.title('Original image')
-	elif values[11] == 'all':
+	elif values[11] == 'all':			# plot sinogram
 		fig, axes = plt.subplots(1,2)
-		# axes[1].imshow(teta_degree,projection,'ro')
 		axes[1].imshow(np.array(projection).T,cmap='gray')
 		axes[1].set_ylabel('The beam which going through the image (t coordinates)')
 		axes[1].set_xlabel('Angle')
 		axes[1].set_title('Sinogram for '+'\nNumber of sampling points: '+str(number_of_sampling_points)+'\n'+' Step size: '+str(step_size))
 		axes[0].set_title('Original')
 		axes[0].imshow(img,cmap='gray')
-	else:
+	else:								# plot the projection of only an angle
 		cizdirilecek_aci = float(values[11])
 		cizdirilecek_acinin_indexi = np.where(teta==cizdirilecek_aci)[0][0]
 		fig, axes = plt.subplots(1,2)
@@ -243,8 +221,6 @@ def filter_it(filter_type=None,high_pass_filter=None):
 	filtered_fft_of_projection = fft_of_projection * high_pass_filter
 	return ifft2(filtered_fft_of_projection).tolist()
 def filterla():
-	# options = {i:j for i,j in zip(keys,c)} [eval(i) for i in ]
-	# options.get(filter,back_projection())
 	if filter == 6:
 		back_projection(filter_it (high_pass_filter=ramp_filter() ))
 	elif filter == 7:
@@ -264,7 +240,6 @@ def back_projection(getir=None):
 		for k in i:
 			o.append(k * np.array(distance[getir.index(i)][i.index(k)]))
 		netice.append(o)
-	# __import__('pdb').set_trace()
 	son_netice = []
 	for i in netice:
 		ara_netice=[]
@@ -307,21 +282,16 @@ def back_projection(getir=None):
 	fig.colorbar(im_back,cax=cax1)
 	# fig.colorbar(im_err,cax=cax2)									# error related, comment/uncomment
 	fig_name = "number_of_sampling_points: "+str(number_of_sampling_points)+" step_size: "+str(step_size)+" "+filter_name+".png"
-	# plt.savefig(fig_name)				# anlamadım hatayı
 	plt.suptitle('number_of_sampling_points: '+str(number_of_sampling_points)+'\n'+' step_size: '+str(step_size)+'\n'+filter_name)
 	plt.show()
 
 if values[2] == True:													# If "Do new projection" is chosen
 	if values[5] == []:
-		mat = sio.loadmat('matlar/'+'kare_kosede_50ye50.mat')						# 1. step: 	load the default image
+		mat = sio.loadmat('matlar/'+'kare_kosede_50ye50.mat')			# 1. step: 	load the default image
 		values[5] = ['kare_kosede_50ye50.mat']
 	else: 																# or other image
 		mat = sio.loadmat('matlar/'+values[5][0])
-	img = list(mat.values())[3]#:][0]
-	# img1=np.zeros((50,50))
-	# img1[29:40,9:20] = img[9:20,9:20]
-	# img1[9:20,29:40] = img[9:20,9:20]
-	# img = img1
+	img = list(mat.values())[3]
 	size = img.shape[0]													# 2. step: 	determine the size of the image
 	number_of_sampling_points = number_of_beams = int(values[3])		# 3. step: 	get number of beams
 	step_size = float(values[4])										# 			get step_size
@@ -340,15 +310,11 @@ else:														# Use ready projection data (txt or mat)
 			lines_from_txt = dosya_txt.readlines()
 			number_of_projections = int(lines_from_txt[0])
 			number_of_sampling_points = int(lines_from_txt[1])
-
 		image_to_be_reconstructed = image_to_be_reconstructed.tolist()
 		step_size = 180/number_of_projections
 		size = mat_liste[6][0][0]
 		columndata = mat_liste[4].tolist()[0]
-		# print(type(columndata))
-		# print('size: ',columndata)
 		rowdata = mat_liste[5].tolist()[0]
-		# distance_arr = mat_liste[6]
 		img = mat_liste[7]
 		with open('distance_list.obj','rb') as dist:
 			distance = pickle.load(dist)
@@ -365,7 +331,6 @@ else:														# Use ready projection data (txt or mat)
 		size = mat_liste[6][0][0]
 		columndata = mat_liste[4].tolist()[0]
 		rowdata = mat_liste[5].tolist()[0]
-		# distance_arr = mat_liste[6]
 		img = mat_liste[7]
 		with open('distance_list.obj','rb') as dist:
 			distance = pickle.load(dist)
